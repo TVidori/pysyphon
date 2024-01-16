@@ -1,1 +1,1 @@
-from .postgresql import postgresql_functions
+import postgresql
