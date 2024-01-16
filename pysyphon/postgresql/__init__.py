@@ -1,1 +1,2 @@
 import pysyphon.postgresql.postgresql_functions
+import pysyphon.postgresql.abstract_table
