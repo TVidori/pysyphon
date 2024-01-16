@@ -1,1 +1,1 @@
-import postgresql
+import pysyphon.postgresql
