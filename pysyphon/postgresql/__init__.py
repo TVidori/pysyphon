@@ -1,1 +1,1 @@
-import postgresql_functions
+import pysyphon.postgresql.postgresql_functions
