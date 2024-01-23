@@ -223,14 +223,20 @@ class AbstractTable:
     @classmethod
     def load_whole_table(
             cls,
-            client_id: str | None = None,
             log_query: bool = False,
     ) -> list[Row]:
-        query = f"SELECT * FROM {cls.table_name}"
-        if client_id is not None:
-            query += f" WHERE client_id = '{client_id}';"
-        else:
-            query += ";"
+        return cls.fetch_data_transaction(
+            query=f"SELECT * FROM {cls.table_name};",
+            log_query=log_query,
+        )
+
+    @classmethod
+    def load_sample_of_table(
+            cls,
+            sample_size: int = 10,
+            log_query: bool = False,
+    ) -> list[Row]:
+        query = f"SELECT * FROM {cls.table_name} LIMIT {sample_size}"
         return cls.fetch_data_transaction(
             query=query,
             log_query=log_query,
