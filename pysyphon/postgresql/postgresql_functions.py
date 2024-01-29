@@ -294,7 +294,11 @@ def past_values_to_sql(values: list) -> list:
 
 def past_value_to_sql(value: typing.Any) -> str:
     if isinstance(value, pd.Series):
-        print(f"Error series in: {value}")
+        print(
+            f"Error, a row value was given a series. Verify you put in value of"
+            f"a row in input and not series of a dataframe. "
+            f"Series input: {value}"
+        )
 
     if value is None:
         return "null"
