@@ -7,7 +7,7 @@ name = "pysyphon"
 version = "0.0.1"
 dependencies = [
   "pandas>=2.1.4",
-  "psycopg2-binary>2.9.9",
+  "psycopg2-binary>=2.9.9",
 ]
 requires-python = ">=3.11"
 authors = [
