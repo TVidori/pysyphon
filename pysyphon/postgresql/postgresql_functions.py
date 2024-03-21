@@ -25,7 +25,7 @@ class IntArray(list):
 
 class FloatArray(list):
     def __init__(self, list_):
-        if not isinstance(list_, typing.Iterable) & pd.isnull(list_):
+        if not isinstance(list_, typing.Iterable) and pd.isnull(list_):
             super().__init__([])
         else:
             super().__init__(list_)
@@ -320,7 +320,8 @@ def past_value_to_sql(value: typing.Any) -> str:
 
     if value is None:
         return "null"
-    elif isinstance(value, IntArray):
+    elif isinstance(value, IntArray) or isinstance(value, FloatArray) or \
+            isinstance(value, VarcharArray):
         return value.to_sql_value()
     elif isinstance(value, FloatArray):
         return value.to_sql_value()
