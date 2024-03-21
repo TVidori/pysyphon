@@ -43,7 +43,7 @@ class FloatArray(list):
 
 class VarcharArray(list):
     def __init__(self, list_):
-        if not isinstance(list_, typing.Iterable) & pd.isnull(list_):
+        if not isinstance(list_, typing.Iterable) and pd.isnull(list_):
             super().__init__([])
         else:
             super().__init__(list_)
