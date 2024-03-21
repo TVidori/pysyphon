@@ -4,59 +4,7 @@ import psycopg2.extensions
 import typing
 import warnings
 
-
-class IntArray(list):
-    def __init__(self, list_):
-        if not isinstance(list_, typing.Iterable) & pd.isnull(list_):
-            super().__init__([])
-        else:
-            super().__init__(list_)
-
-    def to_sql_value(self) -> str:
-        if len(self) == 0:
-            return self.empty_value()
-        else:
-            return f"ARRAY{self}"
-
-    @staticmethod
-    def empty_value() -> str:
-        return "ARRAY[]::integer[]"
-
-
-class FloatArray(list):
-    def __init__(self, list_):
-        if not isinstance(list_, typing.Iterable) and pd.isnull(list_):
-            super().__init__([])
-        else:
-            super().__init__(list_)
-
-    def to_sql_value(self) -> str:
-        if len(self) == 0:
-            return self.empty_value()
-        else:
-            return f"ARRAY{self}"
-
-    @staticmethod
-    def empty_value() -> str:
-        return "ARRAY[]::real[]"
-
-
-class VarcharArray(list):
-    def __init__(self, list_):
-        if not isinstance(list_, typing.Iterable) and pd.isnull(list_):
-            super().__init__([])
-        else:
-            super().__init__(list_)
-
-    def to_sql_value(self) -> str:
-        if len(self) == 0:
-            return self.empty_value()
-        else:
-            return f"ARRAY{self}"
-
-    @staticmethod
-    def empty_value() -> str:
-        return "ARRAY[]::varchar[]"
+from pysyphon.postgresql import postgresql_types
 
 
 def get_connection(
@@ -320,10 +268,9 @@ def past_value_to_sql(value: typing.Any) -> str:
 
     if value is None:
         return "null"
-    elif isinstance(value, IntArray) or isinstance(value, FloatArray) or \
-            isinstance(value, VarcharArray):
-        return value.to_sql_value()
-    elif isinstance(value, FloatArray):
+    elif isinstance(value, postgresql_types.IntArray) \
+            or isinstance(value, postgresql_types.FloatArray) \
+            or isinstance(value, postgresql_types.VarcharArray):
         return value.to_sql_value()
     # TODO: only works for list of string. Use IntArray or FloatArray or
     #  improve process for other types
