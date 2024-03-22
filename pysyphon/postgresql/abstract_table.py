@@ -221,12 +221,19 @@ class AbstractTable:
             return postgresql_object
 
     @classmethod
+    def get_all_columns_as_string(cls) -> str:
+        return ", ".join(cls.Row.columns())
+
+    @classmethod
     def load_whole_table(
             cls,
             log_query: bool = False,
+            force_check_columns: bool = False,
     ) -> list[Row]:
+        columns = "*" if force_check_columns \
+            else cls.get_all_columns_as_string()
         return cls.fetch_data_transaction(
-            query=f"SELECT * FROM {cls.table_name};",
+            query=f"SELECT {columns} FROM {cls.table_name};",
             log_query=log_query,
         )
 
@@ -235,8 +242,15 @@ class AbstractTable:
             cls,
             sample_size: int = 10,
             log_query: bool = False,
+            force_check_columns: bool = False,
     ) -> list[Row]:
-        query = f"SELECT * FROM {cls.table_name} LIMIT {sample_size}"
+        columns = "*" if force_check_columns \
+            else cls.get_all_columns_as_string()
+        query = (
+            f"SELECT {columns} "
+            f"FROM {cls.table_name} "
+            f"LIMIT {sample_size}"
+        )
         return cls.fetch_data_transaction(
             query=query,
             log_query=log_query,
@@ -244,12 +258,15 @@ class AbstractTable:
 
     @classmethod
     def load_with_filter(
-        cls,
-        filter_string: str,
-        log_query: bool = False,
+            cls,
+            filter_string: str,
+            log_query: bool = False,
+            force_check_columns: bool = False,
     ) -> list[Row]:
+        columns = "*" if force_check_columns \
+            else cls.get_all_columns_as_string()
         query = (
-            f"SELECT * FROM {cls.table_name} "
+            f"SELECT {columns} FROM {cls.table_name} "
             f"WHERE {filter_string}; "
         )
         return cls.fetch_data_transaction(
