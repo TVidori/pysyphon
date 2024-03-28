@@ -275,6 +275,38 @@ class AbstractTable:
         )
 
     @classmethod
+    def load_with_python_parameters(
+            cls,
+            order_columns: list[str] | None = None,
+            filter_string: str | None = None,
+            limit: int | None = None,
+            offset: int | None = None,
+            log_query: bool = False,
+            force_check_columns: bool = False,
+    ) -> list[Row]:
+        columns = "*" if force_check_columns \
+            else cls.get_all_columns_as_string()
+        order_command = "ORDER BY " + ", ".join(order_columns) + " "
+        filter_command = (
+            f"WHERE {filter_string} "
+        ) if filter_string is not None else ""
+        limit_command = f"LIMIT {limit} " if limit is not None else ""
+        offset_command = f"OFFSET {offset} " if offset is not None else ""
+        query = (
+            f"SELECT {columns} "
+            f"FROM {cls.table_name} "
+            f"{filter_command} "
+            f"{order_command} "
+            f"{limit_command} "
+            f"{offset_command} "
+            f"; "
+        )
+        return cls.fetch_data_transaction(
+            query=query,
+            log_query=log_query,
+        )
+
+    @classmethod
     def get_table_columns(
             cls,
             cursor,
