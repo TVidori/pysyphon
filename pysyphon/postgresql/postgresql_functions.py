@@ -130,7 +130,7 @@ def append_or_update(
         [
             f"INSERT INTO {table_header}",
             values,
-        ] + ([] if conflict_line == "" else [
+        ] + ([] if (conflict_line == "" or update_line == "") else [
             f"ON CONFLICT ({conflict_line})",
             f"DO UPDATE SET {update_line};"
         ])
