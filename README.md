@@ -12,5 +12,65 @@ If you have any question, do not hesitate to contact thomas@sypher.ai
 
 
 
+### Installing 
+
+`git+https://github.com/TVidori/pysyphon.git`
+
+
+
+### A Simple Example
+
+`Creating the Python class
+
+````python
+from __future__ import annotations
+
+import dataclasses
+
+from pysyphon.postgresql import AbstractTable
+
+
+class PersonsTable(AbstractTable):
+    host = "host_ip"
+    user = "username"
+    password = "password"
+    table_name = "persons"
+    database_name = "my_database"
+    primary_key_column = ["id"]
+
+    @dataclasses.dataclass
+    class Row(AbstractTable.Row):
+        id: int
+        first_name: str
+        last_name: int
+
+````
+
+Loading the data
+
+````python
+data = PersonsTable.load_whole_table()
+print(data)
+````
+
+Adding a list of rows
+
+```python
+persons = [
+    {"id": 0, "first_name": "James", "last_name": "Bond"},
+    {"id": 1, "first_name": "Marcus", "last_name": "Aurelius"},
+]
+
+PersonsTable.append_or_update_list_of_rows(
+    rows=[PersonsTable.Row(
+        id=person["id"],
+        first_name=person["first_name"],
+        last_name=person["last_name"],
+    ) for person in persons]
+)
+```
+
+
+
 
 
