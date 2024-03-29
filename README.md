@@ -6,7 +6,7 @@ pysyphon is the package created by Sypher ([sypher.ai]()) for data loading both 
 
 
 
-Work is still in progress. How to install the package and use it, guidlines for contributing and many more documentation will be added later on. 
+Work is still in progress. More precision on how to install the package and use it, guidlines for contributing and many more documentation will be added later on. 
 
 If you have any question, do not hesitate to contact thomas@sypher.ai 
 
@@ -14,13 +14,15 @@ If you have any question, do not hesitate to contact thomas@sypher.ai
 
 ### Installing 
 
-`git+https://github.com/TVidori/pysyphon.git`
+Run the command:
+
+`pip install git+https://github.com/TVidori/pysyphon.git`
 
 
 
 ### A Simple Example
 
-`Creating the Python class
+Creating the Python class
 
 ````python
 from __future__ import annotations
@@ -46,14 +48,14 @@ class PersonsTable(AbstractTable):
 
 ````
 
-Loading the data
+Loading the data into Python:
 
 ````python
 data = PersonsTable.load_whole_table()
 print(data)
 ````
 
-Adding a list of rows
+Adding a list of rows in the database's table:
 
 ```python
 persons = [
