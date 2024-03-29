@@ -286,7 +286,9 @@ class AbstractTable:
     ) -> list[Row]:
         columns = "*" if force_check_columns \
             else cls.get_all_columns_as_string()
-        order_command = "ORDER BY " + ", ".join(order_columns) + " "
+        order_command = (
+            "ORDER BY " + ", ".join(order_columns) + " "
+        ) if order_columns is not None else ""
         filter_command = (
             f"WHERE {filter_string} "
         ) if filter_string is not None else ""
