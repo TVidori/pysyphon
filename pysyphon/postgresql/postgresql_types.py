@@ -55,7 +55,7 @@ class VarcharArray(list):
             list_with_singe_quote = ", ".join(
                 ("'" + item.replace("'", "''") + "'") for item in self
             )
-            return f"ARRAY{list_with_singe_quote}"
+            return f"ARRAY[{list_with_singe_quote}]"
 
     @staticmethod
     def empty_value() -> str:
