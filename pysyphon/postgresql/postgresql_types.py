@@ -49,7 +49,13 @@ class VarcharArray(list):
         if len(self) == 0:
             return self.empty_value()
         else:
-            return f"ARRAY{self}"
+            # Put single quotes as printing directly a python array will use
+            #  double quotes if a single quote is in it. Escape single quote
+            #  characters by doubling them
+            list_with_singe_quote = ", ".join(
+                ("'" + item.replace("'", "''") + "'") for item in self
+            )
+            return f"ARRAY{list_with_singe_quote}"
 
     @staticmethod
     def empty_value() -> str:
