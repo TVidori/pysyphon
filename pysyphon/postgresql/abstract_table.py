@@ -1,5 +1,6 @@
 import dataclasses
 import logging
+import psycopg2.errors
 import psycopg2.extensions
 import typing
 
@@ -63,7 +64,13 @@ class AbstractTable:
         if log_query:
             LOG.info(f"SQL query: \n{query}")
         with connection.cursor() as cursor:
-            cursor.execute(query)
+            try:
+                cursor.execute(query)
+            except psycopg2.errors.NumericValueOutOfRange as exception:
+                print(
+                    f"Error: {exception} for: {query}"
+                )
+                raise exception
             connection.commit()
             if result_to_fetch:
                 result = cursor.fetchall()
