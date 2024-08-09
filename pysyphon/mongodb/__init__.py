@@ -1,0 +1,1 @@
+from pysyphon.mongodb.abstract_collection import AbstractCollection
