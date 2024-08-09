@@ -37,8 +37,14 @@ class AbstractCollection:
                 f"{key}: {value}" for key, value in vars(self).items()
             ])
 
-        def to_dict(self) -> dict:
-            return dataclasses.asdict(self)
+        def to_dict(self, keep_nones: bool = False) -> dict:
+            if keep_nones:
+                return dataclasses.asdict(self)
+            else:
+                return {
+                    key: value for key, value
+                    in dataclasses.asdict(self).items() if value is not None
+                }
 
         @classmethod
         def load_from_dict(cls, input_dict: dict) -> Document:
@@ -90,9 +96,10 @@ class AbstractCollection:
     def insert_document(
             cls,
             document: Document,
+            save_nones: bool = False,
     ) -> None:
         client, collection = cls.get_client_and_collection()
         collection.insert_one(
-            document=document.to_dict()
+            document=document.to_dict(keep_nones=save_nones)
         )
         client.close()
