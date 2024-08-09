@@ -103,3 +103,19 @@ class AbstractCollection:
             document=document.to_dict(keep_nones=save_nones)
         )
         client.close()
+
+    @classmethod
+    def insert_if_does_not_exist(
+            cls,
+            document: Document,
+            filter_dict: dict,
+            save_nones: bool = False,
+    ) -> None:
+        client, collection = cls.get_client_and_collection()
+        existing_document = collection.find_one(filter=filter_dict)
+        if existing_document is None:
+            collection.insert_one(
+                document=document.to_dict(keep_nones=save_nones)
+            )
+
+        client.close()
