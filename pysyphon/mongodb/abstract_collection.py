@@ -68,7 +68,21 @@ class AbstractCollection:
         return client, database.get_collection(cls.collection_name)
 
     @classmethod
-    def get_document(cls, filter_dict: dict) -> Document | None:
+    def find_many(
+            cls,
+            filter_dict: dict | None = None
+    ) -> list[Document]:
+        client, collection = cls.get_client_and_collection()
+        documents = collection.find(filter=filter_dict)
+
+        python_objects = [
+            cls.Document.load_from_dict(document) for document in documents
+        ]
+        client.close()
+        return python_objects
+
+    @classmethod
+    def find_one(cls, filter_dict: dict) -> Document | None:
         client, collection = cls.get_client_and_collection()
         document = collection.find_one(filter=filter_dict)
 
@@ -93,7 +107,7 @@ class AbstractCollection:
         client.close()
 
     @classmethod
-    def insert_document(
+    def insert_one(
             cls,
             document: Document,
             save_nones: bool = False,
@@ -105,7 +119,7 @@ class AbstractCollection:
         client.close()
 
     @classmethod
-    def insert_if_does_not_exist(
+    def insert_one_if_does_not_exist(
             cls,
             document: Document,
             filter_dict: dict,
