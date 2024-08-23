@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import dataclasses
+import typing
+
 import pymongo
 import pymongo.collection
 
@@ -12,6 +14,8 @@ class AbstractCollection:
     password: str = None
     database_name: str = None
     port: int = 27017
+    overwrite_dict_casting: typing.Callable | None = None
+    overwrite_dict_loading: typing.Callable | None = None
 
     def __init_subclass__(cls):
         # This is needed to enforce the children behaviours
@@ -33,9 +37,11 @@ class AbstractCollection:
     @dataclasses.dataclass
     class Document:
         def __str__(self):
-            return ", ".join([
-                f"{key}: {value}" for key, value in vars(self).items()
-            ])
+            return ", ".join(
+                [
+                    f"{key}: {value}" for key, value in vars(self).items()
+                ]
+            )
 
         def to_dict(self, keep_nones: bool = False) -> dict:
             if keep_nones:
@@ -68,6 +74,29 @@ class AbstractCollection:
         return client, database.get_collection(cls.collection_name)
 
     @classmethod
+    def load_document_from_dict(
+            cls,
+            input_dict: dict
+    ) -> Document:
+        if cls.overwrite_dict_loading is None:
+            return cls.Document.load_from_dict(input_dict)
+        else:
+            return cls.overwrite_dict_loading(input_dict)
+
+    @classmethod
+    def cast_document_to_dict(
+            cls,
+            document: Document,
+            save_nones: bool = False,
+    ) -> dict:
+        if cls.overwrite_dict_casting is None:
+            return document.to_dict(keep_nones=save_nones)
+        else:
+            if save_nones is True:
+                raise NotImplementedError
+            return cls.overwrite_dict_casting(document)
+
+    @classmethod
     def find_many(
             cls,
             filter_dict: dict | None = None
@@ -76,7 +105,7 @@ class AbstractCollection:
         documents = collection.find(filter=filter_dict)
 
         python_objects = [
-            cls.Document.load_from_dict(document) for document in documents
+            cls.load_document_from_dict(document) for document in documents
         ]
         client.close()
         return python_objects
@@ -89,7 +118,7 @@ class AbstractCollection:
         if document is None:
             return None
 
-        python_object = cls.Document.load_from_dict(document)
+        python_object = cls.load_document_from_dict(document)
         client.close()
         return python_object
 
@@ -107,6 +136,19 @@ class AbstractCollection:
         client.close()
 
     @classmethod
+    def increase_attribute(
+            cls,
+            filter_dict: dict,
+            set_dict: dict,
+    ) -> None:
+        client, collection = cls.get_client_and_collection()
+        collection.update_one(
+            filter=filter_dict,
+            update={"$inc": set_dict}
+        )
+        client.close()
+
+    @classmethod
     def insert_one(
             cls,
             document: Document,
@@ -114,7 +156,10 @@ class AbstractCollection:
     ) -> None:
         client, collection = cls.get_client_and_collection()
         collection.insert_one(
-            document=document.to_dict(keep_nones=save_nones)
+            document=cls.cast_document_to_dict(
+                document=document,
+                save_nones=save_nones,
+            ),
         )
         client.close()
 
@@ -129,7 +174,10 @@ class AbstractCollection:
         existing_document = collection.find_one(filter=filter_dict)
         if existing_document is None:
             collection.insert_one(
-                document=document.to_dict(keep_nones=save_nones)
+                document=cls.cast_document_to_dict(
+                    document=document,
+                    save_nones=save_nones,
+                ),
             )
 
         client.close()
