@@ -139,12 +139,12 @@ class AbstractCollection:
     def increase_attribute(
             cls,
             filter_dict: dict,
-            set_dict: dict,
+            inc_dict: dict,
     ) -> None:
         client, collection = cls.get_client_and_collection()
         collection.update_one(
             filter=filter_dict,
-            update={"$inc": set_dict}
+            update={"$inc": inc_dict}
         )
         client.close()
 
