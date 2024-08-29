@@ -149,6 +149,45 @@ class AbstractCollection:
         client.close()
 
     @classmethod
+    def push_element(
+            cls,
+            filter_dict: dict,
+            push_dict: dict,
+    ) -> None:
+        client, collection = cls.get_client_and_collection()
+        collection.update_one(
+            filter=filter_dict,
+            update={"$push": push_dict}
+        )
+        client.close()
+
+    @classmethod
+    def pull_element(
+            cls,
+            filter_dict: dict,
+            pull_dict: dict,
+    ) -> None:
+        client, collection = cls.get_client_and_collection()
+        collection.update_one(
+            filter=filter_dict,
+            update={"$pull": pull_dict}
+        )
+        client.close()
+        
+    @classmethod
+    def add_element_to_set(
+            cls,
+            filter_dict: dict,
+            add_to_set_dict: dict,
+    ) -> None:
+        client, collection = cls.get_client_and_collection()
+        collection.update_one(
+            filter=filter_dict,
+            update={"$addToSet": add_to_set_dict}
+        )
+        client.close()
+
+    @classmethod
     def insert_one(
             cls,
             document: Document,
