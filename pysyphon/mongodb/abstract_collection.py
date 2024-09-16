@@ -153,11 +153,13 @@ class AbstractCollection:
             cls,
             filter_dict: dict,
             push_dict: dict,
+            upsert: bool = False,
     ) -> None:
         client, collection = cls.get_client_and_collection()
         collection.update_one(
             filter=filter_dict,
-            update={"$push": push_dict}
+            update={"$push": push_dict},
+            upsert=upsert,
         )
         client.close()
 
