@@ -117,22 +117,30 @@ def append_or_update(
         else:
             primary_key_columns = primary_key_column
         conflict_line = ", ".join(primary_key_columns)
-        update_line = ", ".join([
-            f"{key} = EXCLUDED.{key}"
-            for key in list_of_row_dicts[0].keys()
-            if key not in primary_key_columns
-        ])
+
+        # If all columns are primary keys, do not update existing result on
+        #  conflicts as no change is needed
+        if len(list_of_row_dicts[0]) == len(primary_key_columns):
+            update_line = "DO NOTHING"
+        else:
+            update_line = "DO UPDATE SET " + ", ".join(
+                [
+                    f"{key} = EXCLUDED.{key}"
+                    for key in list_of_row_dicts[0].keys()
+                    if key not in primary_key_columns
+                ]
+            )
     else:
         conflict_line = ""
         update_line = ""
 
     return "\n".join(
         [
-            f"INSERT INTO {table_header}",
+            f"INSERT INTO {table_header} ",
             values,
         ] + ([] if (conflict_line == "" or update_line == "") else [
-            f"ON CONFLICT ({conflict_line})",
-            f"DO UPDATE SET {update_line};"
+            f"ON CONFLICT ({conflict_line}) ",
+            f"{update_line};"
         ])
     )
 
