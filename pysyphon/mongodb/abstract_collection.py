@@ -127,11 +127,13 @@ class AbstractCollection:
             cls,
             filter_dict: dict,
             set_dict: dict,
+            upsert: bool = False,
     ) -> None:
         client, collection = cls.get_client_and_collection()
         collection.update_one(
             filter=filter_dict,
-            update={"$set": set_dict}
+            update={"$set": set_dict},
+            upsert=upsert,
         )
         client.close()
 
