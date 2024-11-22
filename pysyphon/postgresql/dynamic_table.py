@@ -108,3 +108,19 @@ class DynamicTable:
                 f");"
             ),
         )
+
+    def get_column_names(self) -> list[str]:
+        columns = self.single_transaction_query(
+            query=(
+                f"SELECT column_name "
+                f"FROM information_schema.columns "
+                f"WHERE table_name = '{self.table_name}'; "
+            ),
+            result_to_fetch=True
+        )
+        return [column[0] for column in columns]
+
+    def drop_table(self) -> None:
+        self.single_transaction_query(
+            query=f"DROP TABLE IF EXISTS {self.table_name}"
+        )
