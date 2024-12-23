@@ -1,1 +1,2 @@
 from pysyphon.mongodb.abstract_collection import AbstractCollection
+from pysyphon.mongodb.pysyphon_sub_document import PysyphonSubDocument
