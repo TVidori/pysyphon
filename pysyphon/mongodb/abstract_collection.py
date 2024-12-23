@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import copy
 import dataclasses
+import inspect
 import typing
+import sys
 
 import pymongo
 import pymongo.collection
@@ -80,22 +82,35 @@ class AbstractCollection:
         @classmethod
         def load_document_with_sub_documents(
                 cls,
-                mongodb_dict: dict,
-                locals: dict
+                input_dict: dict,
+                collection_classes: dict | None = None,
         ) -> Document:
-            dict_ = copy.deepcopy(mongodb_dict)
+            # Tries to get the calling script classes. If this does not work,
+            #  the classes can be sent directly from the calling function with:
+            # dict(inspect.getmembers(
+            #     sys.modules[calling_frame.__module__], inspect.isclass
+            # ))
+            # Might be better to pass in the classes directly
+            if collection_classes is None:
+                frame = inspect.currentframe()
+                calling_frame = frame.f_back
+                collection_classes = {
+                    key: value for key, value in calling_frame.f_globals.items()
+                    if inspect.isclass(value)
+                }
+
+            dict_ = copy.deepcopy(input_dict)
             dataclass_annotations = cls.__annotations__
             dataclass_annotations = {
                 key: value.replace(" | None", "").strip()
                 for key, value in dataclass_annotations.items()
             }
-
             for variable_name, variable_type in dataclass_annotations.items():
-                if variable_type in locals:
-                    variable_class = locals[variable_type]
+                if variable_type in collection_classes:
+                    variable_class = collection_classes[variable_type]
                     if "psd_from_dict" in dir(variable_class):
                         dict_[variable_name] = variable_class.parse_obj(
-                            mongodb_dict[variable_name]
+                            input_dict[variable_name]
                         )
 
             return cls.load_from_dict(dict_)
@@ -113,10 +128,28 @@ class AbstractCollection:
     @classmethod
     def load_document_from_dict(
             cls,
-            input_dict: dict
+            input_dict: dict,
+            collection_classes: dict | None = None,
     ) -> Document:
+        # Tries to get the calling script classes. If this does not work,
+        #  the classes can be sent directly from the calling function with:
+        # dict(inspect.getmembers(
+        #     sys.modules[calling_frame.__module__], inspect.isclass
+        # ))
+        # Might be better to pass in the classes directly
+        if collection_classes is None:
+            frame = inspect.currentframe()
+            calling_frame = frame.f_back
+            collection_classes = {
+                key: value for key, value in calling_frame.f_globals.items()
+                if inspect.isclass(value)
+            }
+
         if cls.overwrite_dict_loading is None:
-            return cls.Document.load_from_dict(input_dict)
+            return cls.Document.load_document_with_sub_documents(
+                input_dict=input_dict,
+                collection_classes=collection_classes,
+            )
         else:
             return cls.overwrite_dict_loading(input_dict)
 
@@ -148,26 +181,47 @@ class AbstractCollection:
         return python_objects
 
     @classmethod
-    def find_one(cls, filter_dict: dict) -> Document | None:
+    def find_one(
+            cls,
+            filter_dict: dict,
+            collection_classes: dict | None = None,
+    ) -> Document | None:
+        # Tries to get the calling script classes. If this does not work,
+        #  the classes can be sent directly from the calling function with:
+        # dict(inspect.getmembers(
+        #     sys.modules[calling_frame.__module__], inspect.isclass
+        # ))
+        # Might be better to pass in the classes directly
+        if collection_classes is None:
+            frame = inspect.currentframe()
+            calling_frame = frame.f_back
+            collection_classes = {
+                key: value for key, value in calling_frame.f_globals.items()
+                if inspect.isclass(value)
+            }
+
         client, collection = cls.get_client_and_collection()
         document = collection.find_one(filter=filter_dict)
 
         if document is None:
             return None
 
-        python_object = cls.load_document_from_dict(document)
+        python_object = cls.load_document_from_dict(
+            input_dict=document,
+            collection_classes=collection_classes,
+        )
         client.close()
         return python_object
 
     @classmethod
-    def find_one_as_mongodb_dict(
+    def find_one_as_dict(
             cls,
             filter_dict: dict,
     ) -> dict | None:
         client, collection = cls.get_client_and_collection()
-        dict_ = collection.find_one(filter=filter_dict)
+        dict = collection.find_one(filter=filter_dict)
         client.close()
-        return dict_
+        return dict
 
     @classmethod
     def set_attribute(
@@ -277,6 +331,6 @@ class AbstractCollection:
     ) -> None:
         client, collection = cls.get_client_and_collection()
         collection.delete_one(
-            filter=filter_dict,
+            filter=filter_dict
         )
         client.close()
