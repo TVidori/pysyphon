@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import dataclasses
 import typing
 
@@ -43,25 +44,63 @@ class AbstractCollection:
                 ]
             )
 
-        def to_dict(self, keep_nones: bool = False) -> dict:
+        def to_dict(
+                self,
+                keep_nones: bool = False,
+                cast_sub_documents: bool = True,
+        ) -> dict:
             if keep_nones:
-                return dataclasses.asdict(self)
+                dict_ = dataclasses.asdict(self)
             else:
-                return {
+                dict_ = {
                     key: value for key, value
                     in dataclasses.asdict(self).items() if value is not None
                 }
 
+            if cast_sub_documents:
+                for key, value in dict_.items():
+                    print(f"{key}: {value} - dir: {dir(value)}")
+                    if "psd_to_dict" in dir(value):
+                        dict_[key] = value.psd_to_dict()
+
+            print(dict_)
+            return dict_
+
         @classmethod
         def load_from_dict(cls, input_dict: dict) -> Document:
-            return cls(**{
-                field.name: input_dict.get(field.name)
-                for field in dataclasses.fields(cls)
-            })
+            return cls(
+                **{
+                    field.name: input_dict.get(field.name)
+                    for field in dataclasses.fields(cls)
+                }
+            )
 
         @classmethod
         def keys(cls) -> list[str]:
             return [field.name for field in dataclasses.fields(cls)]
+
+        @classmethod
+        def load_document_with_sub_documents(
+                cls,
+                mongodb_dict: dict,
+                locals: dict
+        ) -> Document:
+            dict_ = copy.deepcopy(mongodb_dict)
+            dataclass_annotations = cls.__annotations__
+            dataclass_annotations = {
+                key: value.replace(" | None", "").strip()
+                for key, value in dataclass_annotations.items()
+            }
+
+            for variable_name, variable_type in dataclass_annotations.items():
+                if variable_type in locals:
+                    variable_class = locals[variable_type]
+                    if "psd_from_dict" in dir(variable_class):
+                        dict_[variable_name] = variable_class.parse_obj(
+                            mongodb_dict[variable_name]
+                        )
+
+            return cls.load_from_dict(dict_)
 
     @classmethod
     def get_client_and_collection(cls) -> tuple[
@@ -123,17 +162,25 @@ class AbstractCollection:
         return python_object
 
     @classmethod
+    def find_one_as_mongodb_dict(
+            cls,
+            filter_dict: dict,
+    ) -> dict | None:
+        client, collection = cls.get_client_and_collection()
+        dict_ = collection.find_one(filter=filter_dict)
+        client.close()
+        return dict_
+
+    @classmethod
     def set_attribute(
             cls,
             filter_dict: dict,
             set_dict: dict,
-            upsert: bool = False,
     ) -> None:
         client, collection = cls.get_client_and_collection()
         collection.update_one(
             filter=filter_dict,
-            update={"$set": set_dict},
-            upsert=upsert,
+            update={"$set": set_dict}
         )
         client.close()
 
@@ -177,7 +224,7 @@ class AbstractCollection:
             update={"$pull": pull_dict}
         )
         client.close()
-        
+
     @classmethod
     def add_element_to_set(
             cls,
@@ -223,4 +270,15 @@ class AbstractCollection:
                 ),
             )
 
+        client.close()
+
+    @classmethod
+    def delete_one(
+            cls,
+            filter_dict: dict,
+    ) -> None:
+        client, collection = cls.get_client_and_collection()
+        collection.delete_one(
+            filter=filter_dict,
+        )
         client.close()
