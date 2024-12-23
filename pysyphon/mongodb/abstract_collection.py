@@ -59,11 +59,9 @@ class AbstractCollection:
 
             if cast_sub_documents:
                 for key, value in dict_.items():
-                    print(f"{key}: {value} - dir: {dir(value)}")
                     if "psd_to_dict" in dir(value):
                         dict_[key] = value.psd_to_dict()
 
-            print(dict_)
             return dict_
 
         @classmethod
