@@ -43,6 +43,9 @@ class AbstractTable:
                 str(value).replace('\n', ' ') for value in vars(self).values()
             ])
 
+        def to_list(self) -> list:
+            return [value for value in vars(self).values()]
+
         @classmethod
         def columns(cls) -> list[str]:
             return [field.name for field in dataclasses.fields(cls)]
