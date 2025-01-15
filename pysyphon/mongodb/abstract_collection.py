@@ -219,9 +219,9 @@ class AbstractCollection:
             filter_dict: dict,
     ) -> dict | None:
         client, collection = cls.get_client_and_collection()
-        dict = collection.find_one(filter=filter_dict)
+        dict_ = collection.find_one(filter=filter_dict)
         client.close()
-        return dict
+        return dict_
 
     @classmethod
     def set_attribute(
