@@ -336,3 +336,14 @@ class AbstractCollection:
             filter=filter_dict
         )
         client.close()
+
+    @classmethod
+    def delete_many(
+            cls,
+            filter_dict: dict,
+    ) -> None:
+        client, collection = cls.get_client_and_collection()
+        collection.delete_many(
+            filter=filter_dict
+        )
+        client.close()
