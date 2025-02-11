@@ -52,6 +52,7 @@ class DynamicTable:
             query: str,
             result_to_fetch: bool = False,
             log_query: bool = False,
+            return_description: bool = False,
     ) -> typing.Any:
         connection = postgresql_functions.get_connection(
             host=self.host,
@@ -65,6 +66,7 @@ class DynamicTable:
         with connection.cursor() as cursor:
             try:
                 cursor.execute(query)
+                description = cursor.description
             except psycopg2.errors.NumericValueOutOfRange as exception:
                 print(
                     f"Error: {exception} for: {query}"
@@ -77,7 +79,10 @@ class DynamicTable:
                 result = None
         connection.close()
 
-        return result
+        if return_description:
+            return result, description
+        else:
+            return result
 
     def check_if_table_exists(self) -> bool:
         return self.single_transaction_query(
